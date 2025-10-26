@@ -1,5 +1,7 @@
 # Cash Crew: Game Design Document
 
+## [Cash Crew](https://datta2907.github.io/cash-crew/)
+<a href="https://datta2907.github.io/cash-crew/" target="_blank"><img src="./art/cash-crew.gif" alt="Animation of a game." width="256"/></a><br/> 
 ## Vision Statement
 Deliver cash to the mafia boss while dodging thieves and obstacles in a fast-paced multiplayer delivery game. Players must cooperate and react quickly to survive and earn maximum cash.
 
