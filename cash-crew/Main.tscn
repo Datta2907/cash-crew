@@ -1,0 +1,82 @@
+[gd_scene load_steps=7 format=3 uid="uid://y34x306b8ae3"]
+
+[ext_resource type="Script" uid="uid://dvt1lue0juug7" path="res://Main.gd" id="1_cm0pq"]
+[ext_resource type="PackedScene" uid="uid://cgsrbslhiqmyt" path="res://map1.tscn" id="1_glv2v"]
+[ext_resource type="PackedScene" uid="uid://r64630bfsal1" path="res://enemy.tscn" id="2_3dxm6"]
+[ext_resource type="PackedScene" uid="uid://dhnm6r5yl6db0" path="res://Bruce.tscn" id="2_uu6xs"]
+[ext_resource type="PackedScene" uid="uid://lrsi5125nmkp" path="res://Robin.tscn" id="3_r0du0"]
+[ext_resource type="PackedScene" uid="uid://dpg403ebe67f2" path="res://map2.tscn" id="4_fos0i"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -40.0
+offset_bottom = -11.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_cm0pq")
+enemy_scene = ExtResource("2_3dxm6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 51.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopViewContainer" type="SubViewportContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TopView" type="SubViewport" parent="VBoxContainer/TopViewContainer"]
+handle_input_locally = false
+size = Vector2i(512, 200)
+render_target_update_mode = 4
+
+[node name="World" type="Node2D" parent="VBoxContainer/TopViewContainer/TopView"]
+
+[node name="Map" parent="VBoxContainer/TopViewContainer/TopView/World" instance=ExtResource("1_glv2v")]
+
+[node name="Bruce" parent="VBoxContainer/TopViewContainer/TopView/World" instance=ExtResource("2_uu6xs")]
+position = Vector2(102, 148)
+
+[node name="MapStart" type="Marker2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
+position = Vector2(58.5, 164)
+
+[node name="MapEnd" type="Marker2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
+position = Vector2(1847.5, 168)
+
+[node name="BottomViewContainer" type="SubViewportContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BottomView" type="SubViewport" parent="VBoxContainer/BottomViewContainer"]
+handle_input_locally = false
+size = Vector2i(512, 300)
+render_target_update_mode = 4
+
+[node name="World2" type="Node2D" parent="VBoxContainer/BottomViewContainer/BottomView"]
+
+[node name="Map" parent="VBoxContainer/BottomViewContainer/BottomView/World2" instance=ExtResource("4_fos0i")]
+position = Vector2(2, -7)
+
+[node name="Robin" parent="VBoxContainer/BottomViewContainer/BottomView/World2" instance=ExtResource("3_r0du0")]
+position = Vector2(102, 108)
+
+[node name="MapStart" type="Marker2D" parent="VBoxContainer/BottomViewContainer/BottomView/World2"]
+position = Vector2(59.5, 118)
+
+[node name="MapEnd" type="Marker2D" parent="VBoxContainer/BottomViewContainer/BottomView/World2"]
+position = Vector2(1885.5, 114)
+
+[node name="SpawnTimer" type="Timer" parent="."]
+autostart = true
+
+[connection signal="timeout" from="SpawnTimer" to="." method="_on_spawn_timer_timeout"]
