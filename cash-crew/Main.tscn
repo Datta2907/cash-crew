@@ -1,10 +1,12 @@
-[gd_scene load_steps=7 format=3 uid="uid://y34x306b8ae3"]
+[gd_scene load_steps=9 format=3 uid="uid://y34x306b8ae3"]
 
 [ext_resource type="Script" uid="uid://dvt1lue0juug7" path="res://Main.gd" id="1_cm0pq"]
 [ext_resource type="PackedScene" uid="uid://cgsrbslhiqmyt" path="res://map1.tscn" id="1_glv2v"]
 [ext_resource type="PackedScene" uid="uid://r64630bfsal1" path="res://enemy.tscn" id="2_3dxm6"]
 [ext_resource type="PackedScene" uid="uid://dhnm6r5yl6db0" path="res://Bruce.tscn" id="2_uu6xs"]
 [ext_resource type="PackedScene" uid="uid://lrsi5125nmkp" path="res://Robin.tscn" id="3_r0du0"]
+[ext_resource type="PackedScene" uid="uid://bs21t8l6h4bw" path="res://success.tscn" id="3_trn2v"]
+[ext_resource type="PackedScene" uid="uid://dqhq01pg7vwj3" path="res://fail.tscn" id="4_03owx"]
 [ext_resource type="PackedScene" uid="uid://dpg403ebe67f2" path="res://map2.tscn" id="4_fos0i"]
 
 [node name="Main" type="Control"]
@@ -20,6 +22,8 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_cm0pq")
 enemy_scene = ExtResource("2_3dxm6")
+success_scene = ExtResource("3_trn2v")
+fail_scene = ExtResource("4_03owx")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1

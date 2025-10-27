@@ -10,7 +10,7 @@ var facing_right = true
 var jumpCount = 0
 var isDead = false
 var isHurt = false
-
+signal player_died
 var bullet_scene = preload("res://bullet.tscn")
 @export var shoot_cooldown := 0.1
 var can_shoot := true
@@ -125,7 +125,7 @@ func take_damage(amount: int):
 func die() -> void:
 	if isDead:
 		return
-		
+	player_died.emit()
 	isDead = true
 	velocity = Vector2.ZERO
 	print("Robin has died.")
