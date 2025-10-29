@@ -544,8 +544,6 @@ shape = SubResource("CapsuleShape2D_oulfj")
 position = Vector2(13, 14)
 
 [node name="Camera2D" type="Camera2D" parent="."]
-offset = Vector2(-300, -150)
-anchor_mode = 0
 zoom = Vector2(3, 3)
 
 [node name="ShootTimer" type="Timer" parent="."]

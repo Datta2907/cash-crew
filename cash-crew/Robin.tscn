@@ -431,8 +431,6 @@ position = Vector2(0, 1)
 shape = SubResource("CapsuleShape2D_oyipb")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-offset = Vector2(-300, -150)
-anchor_mode = 0
 zoom = Vector2(2.5, 2.5)
 
 [node name="muzzle" type="Marker2D" parent="."]
