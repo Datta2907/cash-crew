@@ -430,9 +430,6 @@ animation = &"run"
 position = Vector2(0, 1)
 shape = SubResource("CapsuleShape2D_oyipb")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(2.5, 2.5)
-
 [node name="muzzle" type="Marker2D" parent="."]
 position = Vector2(31, -6)
 

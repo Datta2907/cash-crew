@@ -1,150 +1,180 @@
 extends Control
 
-# --- Viewport Setup ---
 @onready var top_view = $VBoxContainer/TopViewContainer/TopView
 @onready var bottom_view = $VBoxContainer/BottomViewContainer/BottomView
+
+@onready var p1_camera = $VBoxContainer/TopViewContainer/TopView/P1_Camera
+@onready var p2_camera = $VBoxContainer/BottomViewContainer/BottomView/P2_Camera
+
 var top_view_size: Vector2
 var bottom_view_size: Vector2
 
-# --- Spawning Logic ---
 @export var enemy_scene: PackedScene
-var max_enemies_per_world := 3
-var total_waves := 5
-var top_world_spawner = { "total_to_spawn": 0, "spawned_count": 0, "alive_count": 0 }
-var bottom_world_spawner = { "total_to_spawn": 0, "spawned_count": 0, "alive_count": 0 }
+@onready var spawn_timer = $SpawnTimer
+var max_enemies_alive := 3
+var total_enemies_per_location := 15
+var current_enemies_alive := 0
+var top_spawned_count := 0
+var bottom_spawned_count := 0
+var spawn_from_top := true
 
-# --- Player/World References ---
 var player_top: Node2D
 var player_bottom: Node2D
-var world_top: Node
-var world_bottom: Node
+var deliver_1_area: Area2D
+var deliver_2_area: Area2D
 
-# --- Map Boundary Variables ---
-var top_map_start_x: float
-var top_map_end_x: float
-var bottom_map_start_x: float
-var bottom_map_end_x: float
+var top_spawner: Marker2D
+var topp_spawner: Marker2D
+var bottom_spawner: Marker2D
+var bottomm_spawner: Marker2D
 
-# --- Win/Lose Scene Variables ---
-@export var success_scene: PackedScene
-@export var fail_scene: PackedScene
-var game_is_over = false
+@onready var success_screen = $UI/SuccessScreen
+@onready var fail_screen = $UI/FailScreen
 
+var bruce_in_win_area := false
+var robin_in_win_area := false
+var game_is_over := false
 
 func _ready():
-	# Calculate total enemies
-	top_world_spawner.total_to_spawn = max_enemies_per_world * total_waves
-	bottom_world_spawner.total_to_spawn = max_enemies_per_world * total_waves
-	
-	# --- THIS IS THE DYNAMIC VIEWPORT LOGIC ---
-	# Wait one frame for the "Full Rect" and "Expand" to settle
 	await get_tree().create_timer(0.1).timeout
-	# Set the sizes now
 	update_viewport_sizes()
-	# Connect the signal so it re-sizes if the window changes
 	get_tree().get_root().size_changed.connect(update_viewport_sizes)
-	# --- END OF VIEWPORT LOGIC ---
 	
-	# Get references
-	world_top = top_view.get_node("World")
-	player_top = world_top.get_node("Bruce")
-	world_bottom = bottom_view.get_node("World2")
-	player_bottom = world_bottom.get_node("Robin")
+	bottom_view.world_2d = top_view.world_2d
 	
-	# Get map boundaries
-	top_map_start_x = world_top.get_node("MapStart").global_position.x
-	top_map_end_x = world_top.get_node("MapEnd").global_position.x
-	bottom_map_start_x = world_bottom.get_node("MapStart").global_position.x
-	bottom_map_end_x = world_bottom.get_node("MapEnd").global_position.x
+	var world_node = $VBoxContainer/TopViewContainer/TopView/World
+	
+	player_top = world_node.get_node("Bruce")
+	player_bottom = world_node.get_node("Robin")
+	
+	deliver_1_area = world_node.get_node("WinAreas/deliver_1")
+	deliver_2_area = world_node.get_node("WinAreas/deliver_2")
+	
+	top_spawner = world_node.get_node("top")
+	topp_spawner = world_node.get_node("topp")
+	bottom_spawner = world_node.get_node("bottom")
+	bottomm_spawner = world_node.get_node("bottomm")
+	
+	player_top.global_position = world_node.get_node("Bruce").global_position
+	player_bottom.global_position = world_node.get_node("Robin").global_position
 
-	# Connect player death signals
+	player_top.player_died.connect(_on_player_died)
+	player_bottom.player_died.connect(_on_player_died)
+	
+	deliver_1_area.body_entered.connect(_on_deliver_1_entered)
+	deliver_1_area.body_exited.connect(_on_deliver_1_exited)
+	deliver_2_area.body_entered.connect(_on_deliver_2_entered)
+	deliver_2_area.body_exited.connect(_on_deliver_2_exited)
+	
+	success_screen.visible = false
+	fail_screen.visible = false
+
+func _physics_process(_delta: float):
 	if is_instance_valid(player_top):
-		player_top.player_died.connect(_on_player_died)
+		p1_camera.position = player_top.position
+	
 	if is_instance_valid(player_bottom):
-		player_bottom.player_died.connect(_on_player_died)
+		p2_camera.position = player_bottom.position
 
-
-# --- THIS IS THE FUNCTION THAT MAKES THE VIEW DYNAMIC ---
 func update_viewport_sizes():
-	# 1. Get the parent containers
 	var top_container = $VBoxContainer/TopViewContainer
 	var bottom_container = $VBoxContainer/BottomViewContainer
-
-	# 2. Get their new, dynamic size
 	if top_container:
 		top_view_size = top_container.size
-		# 3. Force the SubViewport's size to match
 		if top_view_size.x > 0 and top_view_size.y > 0:
 			top_view.size = top_view_size
-
 	if bottom_container:
 		bottom_view_size = bottom_container.size
-		# 3. Force the SubViewport's size to match
 		if bottom_view_size.x > 0 and bottom_view_size.y > 0:
 			bottom_view.size = bottom_view_size
 
-
-# --- All your other functions are below ---
-
 func _on_spawn_timer_timeout():
-	try_spawn_enemy(world_top, player_top, top_world_spawner, top_view_size, top_map_start_x, top_map_end_x)
-	try_spawn_enemy(world_bottom, player_bottom, bottom_world_spawner, bottom_view_size, bottom_map_start_x, bottom_map_end_x)
-
-
-func try_spawn_enemy(world_node, player_node, spawner, view_size, map_start, map_end):
-	if game_is_over: return
-	if spawner.alive_count >= max_enemies_per_world: return 
-	if spawner.spawned_count >= spawner.total_to_spawn: return
-	if not is_instance_valid(player_node): return
-
-	spawner.alive_count += 1
-	spawner.spawned_count += 1
-	var enemy = enemy_scene.instantiate()
-
-	var x_offset = (view_size.x / 2) + 100
-	var y_top_of_screen = player_node.global_position.y - (view_size.y / 2)
-	var y_pos = y_top_of_screen - 100 
-	var x_pos = 0.0
-	
-	var spawn_pos_right = player_node.global_position.x + x_offset
-	
-	if spawn_pos_right < map_end:
-		x_pos = spawn_pos_right
-	else:
-		var spawn_pos_left = player_node.global_position.x - x_offset
-		x_pos = clamp(spawn_pos_left, map_start, map_end) 
-
-	enemy.global_position = Vector2(x_pos, y_pos)
-	enemy.player_target = player_node 
-	enemy.enemy_died.connect(_on_enemy_died.bind(spawner))
-	world_node.add_child(enemy)
-
-
-func _on_enemy_died(spawner):
-	if game_is_over: return
-	spawner.alive_count -= 1
-	check_for_win_condition()
-
-func check_for_win_condition():
-	var top_complete = top_world_spawner.spawned_count == top_world_spawner.total_to_spawn and top_world_spawner.alive_count == 0
-	var bottom_complete = bottom_world_spawner.spawned_count == bottom_world_spawner.total_to_spawn and bottom_world_spawner.alive_count == 0
-	
-	if top_complete and bottom_complete:
-		_game_over(true)
-
-func _on_player_died():
-	_game_over(false)
-	
-func _game_over(did_win: bool):
 	if game_is_over:
+		spawn_timer.stop()
+		return
+	if current_enemies_alive >= max_enemies_alive:
+		return
+	var all_spawned = (top_spawned_count >= total_enemies_per_location) and (bottom_spawned_count >= total_enemies_per_location)
+	if all_spawned:
 		return
 	
-	game_is_over = true
-	$SpawnTimer.stop()
+	var spawn_point_node = null
+	var player_to_follow = null
 	
-	if did_win:
-		if success_scene:
-			add_child(success_scene.instantiate())
+	if spawn_from_top:
+		if top_spawned_count < 6:
+			spawn_point_node = top_spawner
+			top_spawned_count += 1
+		elif top_spawned_count < total_enemies_per_location:
+			spawn_point_node = topp_spawner
+			top_spawned_count += 1
+		
+		player_to_follow = player_top
+		spawn_from_top = false
+		
 	else:
-		if fail_scene:
-			add_child(fail_scene.instantiate())
+		if bottom_spawned_count < 6:
+			spawn_point_node = bottom_spawner
+			bottom_spawned_count += 1
+		elif bottom_spawned_count < total_enemies_per_location:
+			spawn_point_node = bottomm_spawner
+			bottom_spawned_count += 1
+			
+		player_to_follow = player_bottom
+		spawn_from_top = true
+	
+	if spawn_point_node != null:
+		current_enemies_alive += 1
+		var enemy = enemy_scene.instantiate()
+		enemy.global_position = spawn_point_node.global_position
+		
+		if is_instance_valid(player_to_follow):
+			enemy.player_target = player_to_follow
+		else: 
+			enemy.player_target = player_top if player_to_follow == player_bottom else player_bottom
+		
+		enemy.enemy_died.connect(_on_enemy_died)
+		$VBoxContainer/TopViewContainer/TopView/World.add_child(enemy) 
+	elif not all_spawned:
+		spawn_from_top = not spawn_from_top
+
+func _on_enemy_died():
+	current_enemies_alive -= 1
+	check_for_win_condition()
+
+func _on_player_died():
+	if game_is_over: return
+	game_is_over = true
+	fail_screen.visible = true
+	get_tree().paused = true
+
+func _on_deliver_1_entered(body):
+	if body == player_top:
+		bruce_in_win_area = true
+		check_for_win_condition()
+		
+func _on_deliver_1_exited(body):
+	if body == player_top:
+		bruce_in_win_area = false
+		check_for_win_condition()
+		
+func _on_deliver_2_entered(body):
+	if body == player_bottom:
+		robin_in_win_area = true
+		check_for_win_condition()
+		
+func _on_deliver_2_exited(body):
+	if body == player_bottom:
+		robin_in_win_area = false
+		check_for_win_condition()
+
+func check_for_win_condition():
+	if game_is_over: return
+	var all_enemies_spawned = (top_spawned_count == total_enemies_per_location) and (bottom_spawned_count == total_enemies_per_location)
+	var all_enemies_dead = current_enemies_alive == 0
+	var both_players_in_area = bruce_in_win_area and robin_in_win_area
+	
+	if all_enemies_spawned and all_enemies_dead and both_players_in_area:
+		game_is_over = true
+		success_screen.visible = true
+		get_tree().paused = true

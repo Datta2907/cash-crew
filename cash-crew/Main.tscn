@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://y34x306b8ae3"]
+[gd_scene load_steps=10 format=3 uid="uid://y34x306b8ae3"]
 
 [ext_resource type="Script" uid="uid://dvt1lue0juug7" path="res://Main.gd" id="1_cm0pq"]
 [ext_resource type="PackedScene" uid="uid://cgsrbslhiqmyt" path="res://map1.tscn" id="1_glv2v"]
@@ -7,7 +7,11 @@
 [ext_resource type="PackedScene" uid="uid://lrsi5125nmkp" path="res://Robin.tscn" id="3_r0du0"]
 [ext_resource type="PackedScene" uid="uid://bs21t8l6h4bw" path="res://success.tscn" id="3_trn2v"]
 [ext_resource type="PackedScene" uid="uid://dqhq01pg7vwj3" path="res://fail.tscn" id="4_03owx"]
-[ext_resource type="PackedScene" uid="uid://dpg403ebe67f2" path="res://map2.tscn" id="4_fos0i"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_lgr22"]
+radius = 20.09975
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_trn2v"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -20,8 +24,6 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_cm0pq")
 enemy_scene = ExtResource("2_3dxm6")
-success_scene = ExtResource("3_trn2v")
-fail_scene = ExtResource("4_03owx")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -39,7 +41,7 @@ size_flags_vertical = 3
 
 [node name="TopView" type="SubViewport" parent="VBoxContainer/TopViewContainer"]
 handle_input_locally = false
-size = Vector2i(1000, 300)
+size = Vector2i(3000, 512)
 render_target_update_mode = 4
 
 [node name="World" type="Node2D" parent="VBoxContainer/TopViewContainer/TopView"]
@@ -47,13 +49,45 @@ render_target_update_mode = 4
 [node name="Map" parent="VBoxContainer/TopViewContainer/TopView/World" instance=ExtResource("1_glv2v")]
 
 [node name="Bruce" parent="VBoxContainer/TopViewContainer/TopView/World" instance=ExtResource("2_uu6xs")]
-position = Vector2(102, 148)
+position = Vector2(127, 199)
 
-[node name="MapStart" type="Marker2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
-position = Vector2(58.5, 164)
+[node name="top" type="Marker2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
+position = Vector2(711, 216)
 
-[node name="MapEnd" type="Marker2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
-position = Vector2(1847.5, 168)
+[node name="bottom" type="Marker2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
+position = Vector2(710, 489)
+
+[node name="bottomm" type="Marker2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
+position = Vector2(1686, 487)
+
+[node name="topp" type="Marker2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
+position = Vector2(1687, 215)
+
+[node name="Robin" parent="VBoxContainer/TopViewContainer/TopView/World" instance=ExtResource("3_r0du0")]
+position = Vector2(131, 461)
+
+[node name="WinAreas" type="Node2D" parent="VBoxContainer/TopViewContainer/TopView/World"]
+
+[node name="deliver_1" type="Area2D" parent="VBoxContainer/TopViewContainer/TopView/World/WinAreas"]
+position = Vector2(2021, 225)
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VBoxContainer/TopViewContainer/TopView/World/WinAreas/deliver_1"]
+position = Vector2(4, 0)
+shape = SubResource("CircleShape2D_lgr22")
+
+[node name="deliver_2" type="Area2D" parent="VBoxContainer/TopViewContainer/TopView/World/WinAreas"]
+position = Vector2(2024, 493)
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VBoxContainer/TopViewContainer/TopView/World/WinAreas/deliver_2"]
+shape = SubResource("CircleShape2D_trn2v")
+
+[node name="P1_Camera" type="Camera2D" parent="VBoxContainer/TopViewContainer/TopView"]
+position = Vector2(79, -30)
+zoom = Vector2(3, 3)
 
 [node name="BottomViewContainer" type="SubViewportContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -64,21 +98,16 @@ handle_input_locally = false
 size = Vector2i(1000, 300)
 render_target_update_mode = 4
 
-[node name="World2" type="Node2D" parent="VBoxContainer/BottomViewContainer/BottomView"]
-
-[node name="Map" parent="VBoxContainer/BottomViewContainer/BottomView/World2" instance=ExtResource("4_fos0i")]
-position = Vector2(2, -7)
-
-[node name="Robin" parent="VBoxContainer/BottomViewContainer/BottomView/World2" instance=ExtResource("3_r0du0")]
-position = Vector2(102, 108)
-
-[node name="MapStart" type="Marker2D" parent="VBoxContainer/BottomViewContainer/BottomView/World2"]
-position = Vector2(59.5, 118)
-
-[node name="MapEnd" type="Marker2D" parent="VBoxContainer/BottomViewContainer/BottomView/World2"]
-position = Vector2(1885.5, 114)
+[node name="P2_Camera" type="Camera2D" parent="VBoxContainer/BottomViewContainer/BottomView"]
+zoom = Vector2(2.5, 2.5)
 
 [node name="SpawnTimer" type="Timer" parent="."]
 autostart = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="SuccessScreen" parent="UI" instance=ExtResource("3_trn2v")]
+
+[node name="FailScreen" parent="UI" instance=ExtResource("4_03owx")]
 
 [connection signal="timeout" from="SpawnTimer" to="." method="_on_spawn_timer_timeout"]
